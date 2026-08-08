@@ -1,13 +1,12 @@
 #!/data/data/com.termux/files/usr/bin/bash
-
-Omni Toolkit – One‑click installer for Termux
+# Omni Toolkit – One‑click installer for Termux
 
 set -e
 
 echo "[*] Checking Termux environment..."
 if [ ! -d /data/data/com.termux ]; then
-echo "[!] This script is meant for Termux on Android."
-exit 1
+    echo "[!] This script is meant for Termux on Android."
+    exit 1
 fi
 
 echo "[*] Updating packages..."
@@ -41,16 +40,16 @@ chmod +x ~/.termux_load.sh
 
 echo "[*] Adding welcome to .zshrc..."
 if ! grep -q "source ~/.termux_load.sh" ~/.zshrc; then
-echo -e "\n# Omni welcome loader\nsource ~/.termux_load.sh" >> ~/.zshrc
+    echo -e "\n# Omni welcome loader\nsource ~/.termux_load.sh" >> ~/.zshrc
 fi
 
 echo "[*] Creating 'omni' alias..."
 if ! grep -q "alias omni=" ~/.zshrc; then
-echo "alias omni='python3 ~/Omni/menu.py'" >> ~/.zshrc
+    echo "alias omni='python3 ~/Omni/menu.py'" >> ~/.zshrc
 fi
 
-echo "[] Making Python files executable..."
-chmod +x ~/Omni/.py ~/Omni/core/*.py
+echo "[*] Making Python files executable..."
+chmod +x ~/Omni/*.py ~/Omni/core/*.py
 
 echo ""
 echo "✅ Omni Toolkit installed successfully!"
@@ -62,5 +61,3 @@ echo ""
 echo "To apply a unified theme, run 'omni', go to Settings → Option 6."
 echo ""
 echo "Close and reopen Termux to see your new welcome banner."
-chmod +x install.sh
-
