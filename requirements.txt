@@ -1,0 +1,8 @@
+requests
+colorama
+Pillow
+dnspython
+schedule
+networkx
+matplotlib
+wordcloud
