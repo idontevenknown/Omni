@@ -4,7 +4,7 @@ from colorama import init, Fore, Style
 init(autoreset=True)
 
 sys.path.insert(0, os.path.expanduser("~/Omni/core"))
-import recon, crawler, network, forensics, inject, export, config_utils
+import recon, crawler, network, forensics, inject, export
 from file_picker import pick_file
 
 CONFIG_PATH = os.path.expanduser("~/.omni_config")
@@ -184,6 +184,28 @@ def forensics_menu():
                 if os.path.isfile(payload):
                     with open(payload, "rb") as f:
                         payload_data = f.read()
+        elif choice == "f":
+            domain = input("Domain: ").strip()
+            if confirm_command(f"python3 ~/Omni/core/ssl_scraper.py {domain}"):
+                os.system(f"python3 ~/Omni/core/ssl_scraper.py {domain}")
+        elif choice == "g":
+            ip = input("IP address: ").strip()
+            if confirm_command(f"python3 ~/Omni/core/reverse_dns.py {ip}"):
+                os.system(f"python3 ~/Omni/core/reverse_dns.py {ip}")
+        elif choice == "h":
+            ip = input("IP address: ").strip()
+            if confirm_command(f"python3 ~/Omni/core/asn_ip.py {ip}"):
+                os.system(f"python3 ~/Omni/core/asn_ip.py {ip}")
+        elif choice == "i":
+            host = input("Host (IP/domain): ").strip()
+            port = input("Port: ").strip()
+            if confirm_command(f"python3 ~/Omni/core/banner_grab.py {host} {port}"):
+                os.system(f"python3 ~/Omni/core/banner_grab.py {host} {port}")
+        elif choice == "j":
+            host = input("Host (domain): ").strip()
+            port = input("Port (default 443): ").strip() or "443"
+            if confirm_command(f"python3 ~/Omni/core/ssl_analysis.py {host} --port {port}"):
+                os.system(f"python3 ~/Omni/core/ssl_analysis.py {host} --port {port}")
                 else:
                     payload_data = payload.encode()
                 outfile = pick_file() if input("Output file? (y/n): ").strip().lower() == 'y' else None
@@ -237,102 +259,21 @@ def export_menu():
             print("Invalid choice. Press Enter...")
             input()
 
-def settings_menu():
-    while True:
-        os.system('clear')
-        show_banner()
-        print("--- Settings ---")
-        config = config_utils.get_config()
-        current_user = config.get("USER_NAME", "OVERSEER")
-        current_greeting = config.get("GREETING", "Welcome back")
-        current_theme = config.get("THEME", "default")
-        current_style = config.get("LOADING_STYLE", "bar")
-        current_speed = config.get("LOADING_SPEED", "normal")
-        print(f"1. Change Username (current: {current_user})")
-        print(f"2. Change Greeting (current: {current_greeting})")
-        print(f"3. Change Theme (current: {current_theme})")
-        print(f"4. Change Loading Style (current: {current_style})")
-        print(f"5. Change Loading Speed (current: {current_speed})")
-        print("6. Show Current Config")
-        print("b. Back to main menu")
-        choice = input("> ").strip().lower()
-        if choice == "b":
-            break
-        elif choice == "1":
-            name = input("Enter new username: ").strip()
-            if name:
-                config_utils.set_config("USER_NAME", name)
-            else:
-                print("Invalid.")
-        elif choice == "2":
-            greeting = input("Enter new greeting: ").strip()
-            if greeting:
-                config_utils.set_config("GREETING", greeting)
-            else:
-                print("Invalid.")
-        elif choice == "3":
-            print("Available themes: default, matrix, neon, ocean, dark")
-            theme = input("Enter theme name: ").strip()
-            if theme in ["default","matrix","neon","ocean","dark"]:
-                config_utils.set_config("THEME", theme)
-            else:
-                print("Invalid theme.")
-        elif choice == "4":
-            style = input("Enter loading style (bar/spinner): ").strip().lower()
-            if style in ["bar","spinner"]:
-                config_utils.set_config("LOADING_STYLE", style)
-            else:
-                print("Invalid style.")
-        elif choice == "5":
-            speed = input("Enter loading speed (fast/normal/slow): ").strip().lower()
-            if speed in ["fast","normal","slow"]:
-                config_utils.set_config("LOADING_SPEED", speed)
-            else:
-                print("Invalid speed.")
-        elif choice == "6":
-            print("\nCurrent config:")
-            for k, v in config.items():
-                print(f"  {k} = {v}")
-            input("\nPress Enter to continue...")
-        else:
-            print("Invalid choice. Press Enter...")
-            input()
-
 def advanced_menu():
     while True:
         os.system('clear')
         show_banner()
         print("--- Advanced Tools ---")
+    print("f. SSL Certificate Scraper")
+    print("g. Reverse DNS Lookup")
+    print("h. ASN/IP Intelligence")
+    print("i. Service Banner Grabbing")
+    print("j. SSL/TLS Analysis")
         print("a. Wordlist Generator")
         print("b. Password Strength Analyzer")
         print("c. Subdomain Takeover Check")
         print("d. Email Breach Checker")
         print("e. Directory Brute‑force")
-        print("f. SSL Certificate Scraper")
-        print("g. Reverse DNS Lookup")
-        print("h. ASN/IP Intelligence")
-        print("i. Service Banner Grabbing")
-        print("j. SSL/TLS Analysis")
-        print("k. Proxy/Tor Support")
-        print("l. Webhook Notifier")
-        print("m. Task Scheduler")
-        print("n. Mass Scan Automation")
-        print("o. Report Generator")
-        print("p. Exploit Payload Generator")
-        print("q. Hash Cracker (offline)")
-        print("r. Fake Identity Generator")
-        print("s. Social Engineering Template Builder")
-        print("t. Decoy File Generator")
-        print("u. EXIF Geolocation")
-        print("v. Steganalysis (detect hidden data)")
-        print("w. Metadata Scrubber")
-        print("x. File Carving (foremost)")
-        print("y. QR Code Generator/Decoder")
-        print("z. Network Graph Generator")
-        print("aa. Wordcloud Generator")
-        print("ab. Browser Fingerprint Randomizer")
-        print("ac. OCR (Tesseract)")
-        print("ad. Full WHOIS Lookup")
         print("b. Back to main menu")
         choice = input("> ").strip().lower()
         if choice == "b":
@@ -388,175 +329,6 @@ def advanced_menu():
             port = input("Port (default 443): ").strip() or "443"
             if confirm_command(f"python3 ~/Omni/core/ssl_analysis.py {host} --port {port}"):
                 os.system(f"python3 ~/Omni/core/ssl_analysis.py {host} --port {port}")
-        elif choice == "k":
-            print("Proxy/Tor Support")
-            print("1. Set HTTP/HTTPS proxy")
-            print("2. Unset proxy")
-            print("3. Toggle Tor mode")
-            sub = input("> ").strip()
-            if sub == "1":
-                http = input("HTTP proxy (e.g., http://127.0.0.1:8080): ").strip()
-                https = input("HTTPS proxy: ").strip()
-                os.system(f"python3 ~/Omni/core/proxy.py set --http {http} --https {https}")
-            elif sub == "2":
-                os.system("python3 ~/Omni/core/proxy.py unset")
-            elif sub == "3":
-                os.system("python3 ~/Omni/core/proxy.py tor")
-            else:
-                print("Invalid")
-        elif choice == "l":
-            print("Webhook Notifier")
-            print("1. Configure webhook")
-            print("2. Send message")
-            sub = input("> ").strip()
-            if sub == "1":
-                service = input("Service (discord/telegram/slack): ").strip()
-                url = input("Webhook URL: ").strip()
-                os.system(f"python3 ~/Omni/core/webhook.py config --service {service} --url {url}")
-            elif sub == "2":
-                service = input("Service: ").strip()
-                message = input("Message: ").strip()
-                title = input("Title (optional): ").strip()
-                os.system(f"python3 ~/Omni/core/webhook.py send --service {service} --message '{message}' --title '{title}'")
-            else:
-                print("Invalid")
-        elif choice == "m":
-            print("Task Scheduler")
-            print("1. Add task")
-            print("2. Start scheduler")
-            print("3. List tasks")
-            sub = input("> ").strip()
-            if sub == "1":
-                name = input("Task name: ").strip()
-                cmd = input("Command to run (use absolute paths): ").strip()
-                interval = input("Interval (number): ").strip()
-                unit = input("Unit (minutes/hours/days): ").strip()
-                os.system(f"python3 ~/Omni/core/scheduler.py add --name '{name}' --command '{cmd}' --interval {interval} --unit {unit}")
-            elif sub == "2":
-                os.system("python3 ~/Omni/core/scheduler.py start")
-            elif sub == "3":
-                os.system("python3 ~/Omni/core/scheduler.py list")
-            else:
-                print("Invalid")
-        elif choice == "n":
-            target_file = input("Target file path: ").strip()
-            mod_cmd = input("Module command (use {target} placeholder): ").strip()
-            threads = input("Threads (default 10): ").strip() or "10"
-            os.system(f"python3 ~/Omni/core/mass_scan.py '{target_file}' --module '{mod_cmd}' --threads {threads}")
-        elif choice == "o":
-            print("Report Generator")
-            inp = input("Input JSON file or 'last' for last result: ").strip()
-            out = input("Output HTML file (default report.html): ").strip() or "report.html"
-            title = input("Report title (default Omni Report): ").strip() or "Omni Report"
-            os.system(f"python3 ~/Omni/core/report_gen.py --input {inp} --output {out} --title '{title}'")
-        elif choice == "p":
-            type = input("Payload type (python/bash/powershell): ").strip()
-            lhost = input("Listener IP: ").strip()
-            lport = input("Listener port: ").strip()
-            out = input("Output file (optional): ").strip() or ""
-            if out:
-                os.system(f"python3 ~/Omni/core/payload_gen.py {type} {lhost} {lport} --output {out}")
-            else:
-                os.system(f"python3 ~/Omni/core/payload_gen.py {type} {lhost} {lport}")
-        elif choice == "q":
-            hash_val = input("Hash value: ").strip()
-            htype = input("Hash type (md5/sha1/sha256) [default md5]: ").strip() or "md5"
-            wl = input("Wordlist path (default ~/Omni/wordlists/rockyou.txt): ").strip() or "~/Omni/wordlists/rockyou.txt"
-            os.system(f"python3 ~/Omni/core/hash_cracker.py {hash_val} --type {htype} --wordlist {wl}")
-        elif choice == "r":
-            count = input("Number of identities (default 1): ").strip() or "1"
-            js = input("Output as JSON? (y/n): ").strip().lower() == 'y'
-            if js:
-                os.system(f"python3 ~/Omni/core/fake_id.py --count {count} --json")
-            else:
-                os.system(f"python3 ~/Omni/core/fake_id.py --count {count}")
-        elif choice == "s":
-            print("Available templates: urgent, invoice, password_reset, offer")
-            template = input("Template name: ").strip()
-            target = input("Target name (optional): ").strip()
-            company = input("Company name (optional): ").strip()
-            link = input("Link (optional): ").strip()
-            amount = input("Amount (for invoice): ").strip()
-            date = input("Date (for invoice): ").strip()
-            offer = input("Offer description: ").strip()
-            cmd = f"python3 ~/Omni/core/se_template.py --template {template}"
-            if target: cmd += f" --target '{target}'"
-            if company: cmd += f" --company '{company}'"
-            if link: cmd += f" --link '{link}'"
-            if amount: cmd += f" --amount '{amount}'"
-            if date: cmd += f" --date '{date}'"
-            if offer: cmd += f" --offer '{offer}'"
-            out = input("Output file (optional): ").strip()
-            if out: cmd += f" --output {out}"
-            os.system(cmd)
-        elif choice == "t":
-            print("1. Generate single decoy file")
-            print("2. Generate multiple decoy files")
-            sub = input("> ").strip()
-            if sub == "1":
-                out = input("Output file path: ").strip()
-                size = input("Size in KB (default 10): ").strip() or "10"
-                os.system(f"python3 ~/Omni/core/decoy_gen.py --output {out} --size {size}")
-            elif sub == "2":
-                folder = input("Folder to save decoys: ").strip()
-                count = input("Number of files: ").strip()
-                os.system(f"python3 ~/Omni/core/decoy_gen.py --count {count} --folder {folder}")
-            else:
-                print("Invalid")
-        elif choice == "u":
-            img = input("Image file path: ").strip()
-            os.system(f"python3 ~/Omni/core/exif_geo.py {img}")
-        elif choice == "v":
-            img = input("Image file path: ").strip()
-            os.system(f"python3 ~/Omni/core/steganalysis.py {img}")
-        elif choice == "w":
-            file = input("File to scrub: ").strip()
-            out = input("Output file (optional): ").strip() or ""
-            if out:
-                os.system(f"python3 ~/Omni/core/metadata_scrub.py {file} --output {out}")
-            else:
-                os.system(f"python3 ~/Omni/core/metadata_scrub.py {file}")
-        elif choice == "x":
-            img = input("Image file (e.g., .dd): ").strip()
-            outdir = input("Output directory (default carved): ").strip() or "carved"
-            os.system(f"python3 ~/Omni/core/file_carve.py {img} --output {outdir}")
-        elif choice == "y":
-            print("1. Generate QR code")
-            print("2. Decode QR code")
-            sub = input("> ").strip()
-            if sub == "1":
-                data = input("Data to encode: ").strip()
-                out = input("Output image file: ").strip()
-                os.system(f"python3 ~/Omni/core/qr_tool.py generate --data '{data}' --output {out}")
-            elif sub == "2":
-                img = input("QR code image: ").strip()
-                os.system(f"python3 ~/Omni/core/qr_tool.py decode --image {img}")
-            else:
-                print("Invalid")
-        elif choice == "z":
-            inp = input("JSON file path (with edges): ").strip()
-            out = input("Output image (default graph.png): ").strip() or "graph.png"
-            os.system(f"python3 ~/Omni/core/net_graph.py {inp} --output {out}")
-        elif choice == "aa":
-            txt = input("Text file path: ").strip()
-            out = input("Output image (default wordcloud.png): ").strip() or "wordcloud.png"
-            maxw = input("Max words (default 100): ").strip() or "100"
-            os.system(f"python3 ~/Omni/core/wordcloud_gen.py {txt} --output {out} --max {maxw}")
-        elif choice == "ab":
-            cnt = input("Number of fingerprints (default 1): ").strip() or "1"
-            js = input("Output as JSON? (y/n): ").strip().lower() == 'y'
-            if js:
-                os.system(f"python3 ~/Omni/core/fingerprint.py --json --count {cnt}")
-            else:
-                os.system(f"python3 ~/Omni/core/fingerprint.py --count {cnt}")
-        elif choice == "ac":
-            img = input("Image file: ").strip()
-            lang = input("Language (default eng): ").strip() or "eng"
-            os.system(f"python3 ~/Omni/core/ocr.py {img} --lang {lang}")
-        elif choice == "ad":
-            dom = input("Domain: ").strip()
-            server = input("WHOIS server (default whois.verisign-grs.com): ").strip() or "whois.verisign-grs.com"
-            os.system(f"python3 ~/Omni/core/whois_full.py {dom} --server {server}")
         else:
             print("Invalid choice. Press Enter...")
             input()
@@ -571,8 +343,7 @@ def main_menu():
         print("4. File Forensics & Injection")
         print("5. Export Results")
         print("6. Advanced Tools")
-        print("7. Settings")
-        print("8. Exit")
+        print("7. Exit")
         choice = input("> ").strip().lower()
         if choice in ["1", "recon"]:
             recon_menu()
@@ -586,9 +357,7 @@ def main_menu():
             export_menu()
         elif choice in ["6", "advanced"]:
             advanced_menu()
-        elif choice in ["7", "settings"]:
-            settings_menu()
-        elif choice in ["8", "exit"]:
+        elif choice in ["7", "exit"]:
             print("Exiting.")
             break
         else:

@@ -1,0 +1,319 @@
+#!/usr/bin/env python3
+import os, sys, time, subprocess
+from colorama import init, Fore, Style
+init(autoreset=True)
+
+sys.path.insert(0, os.path.expanduser("~/Omni/core"))
+import recon, crawler, network, forensics, inject, export
+from file_picker import pick_file
+
+CONFIG_PATH = os.path.expanduser("~/.omni_config")
+TOOL_NAME = "Ω-OMNI Core"
+
+def load_config():
+    global TOOL_NAME
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH, 'r') as f:
+            for line in f:
+                if line.strip() and not line.startswith('#'):
+                    key, val = line.strip().split('=', 1)
+                    if key == "TOOL_NAME":
+                        TOOL_NAME = val.strip()
+    else:
+        with open(CONFIG_PATH, 'w') as f:
+            f.write("# Omni configuration\nTOOL_NAME=Ω-OMNI Core\n")
+
+load_config()
+
+def show_banner():
+    banner = f"""
+{Fore.CYAN}   ╔══════════════════════════════════════════════════════════╗
+{Fore.CYAN}   ║                                                          ║
+{Fore.MAGENTA}   ║        ██████  ███    ██ ███    ██ ██ ███████         ║
+{Fore.MAGENTA}   ║       ██    ██ ████   ██ ████   ██ ██ ██              ║
+{Fore.MAGENTA}   ║       ██    ██ ██ ██  ██ ██ ██  ██ ██ █████           ║
+{Fore.MAGENTA}   ║       ██    ██ ██  ██ ██ ██  ██ ██ ██ ██              ║
+{Fore.MAGENTA}   ║        ██████  ██   ████ ██   ████ ██ ███████         ║
+{Fore.CYAN}   ║                                                          ║
+{Fore.CYAN}   ╚══════════════════════════════════════════════════════════╝
+{Style.RESET_ALL}
+"""
+    print(banner)
+    print(f"{Fore.YELLOW}                ── {TOOL_NAME} ──{Style.RESET_ALL}\n")
+
+last_result = None
+
+def confirm_command(cmd):
+    print(f"\n{Fore.YELLOW}[GENERATED] {cmd}{Style.RESET_ALL}")
+    ans = input("[?] Execute? (y/n) > ").strip().lower()
+    return ans in ['y', 'yes']
+
+def run_submodule(module_func, *args):
+    global last_result
+    result = module_func(*args)
+    last_result = result
+    print(f"\n{Fore.GREEN}[RESULT]{Style.RESET_ALL}")
+    print(result)
+    input("\nPress Enter to continue...")
+    return result
+
+def recon_menu():
+    while True:
+        os.system('clear')
+        show_banner()
+        print("--- Reconnaissance ---")
+        print("a. Subdomain brute‑force")
+        print("b. Port scan")
+        print("c. DNS lookup")
+        print("d. WHOIS lookup")
+        print("b. Back to main menu")
+        choice = input("> ").strip().lower()
+        if choice == "b":
+            break
+        elif choice == "a":
+            domain = input("Domain (e.g., example.com): ").strip()
+            if confirm_command(f"python3 ~/Omni/core/recon.py subdomains {domain}"):
+                run_submodule(recon.subdomains, domain)
+        elif choice == "b":
+            target = input("Target IP/host: ").strip()
+            ports = input("Port range (default 1-1024): ").strip() or "1-1024"
+            if confirm_command(f"python3 ~/Omni/core/recon.py portscan {target} {ports}"):
+                run_submodule(recon.port_scan, target, ports)
+        elif choice == "c":
+            domain = input("Domain: ").strip()
+            if confirm_command(f"python3 ~/Omni/core/recon.py dns {domain}"):
+                run_submodule(recon.dns_lookup, domain)
+        elif choice == "d":
+            domain = input("Domain: ").strip()
+            print(recon.whois(domain))
+            input("\nPress Enter to continue...")
+        else:
+            print("Invalid choice. Press Enter...")
+            input()
+
+def crawler_menu():
+    while True:
+        os.system('clear')
+        show_banner()
+        print("--- Web Crawler ---")
+        print("a. Crawl a URL (extract links/emails)")
+        print("b. Back to main menu")
+        choice = input("> ").strip().lower()
+        if choice == "b":
+            break
+        elif choice == "a":
+            url = input("URL: ").strip()
+            depth = input("Depth (default 1): ").strip() or "1"
+            if confirm_command(f"python3 ~/Omni/core/crawler.py {url} --depth {depth}"):
+                run_submodule(crawler.crawl, url, int(depth))
+        else:
+            print("Invalid choice. Press Enter...")
+            input()
+
+def network_menu():
+    while True:
+        os.system('clear')
+        show_banner()
+        print("--- Network Scanner ---")
+        print("a. ARP sweep")
+        print("b. Ping sweep (CIDR)")
+        print("c. Show local listening ports")
+        print("b. Back to main menu")
+        choice = input("> ").strip().lower()
+        if choice == "b":
+            break
+        elif choice == "a":
+            iface = input("Interface (optional): ").strip() or None
+            if confirm_command("arp-scan --localnet"):
+                run_submodule(network.arp_scan, iface)
+        elif choice == "b":
+            cidr = input("CIDR (e.g., 192.168.1.0/24): ").strip()
+            if confirm_command(f"python3 ~/Omni/core/network.py ping --cidr {cidr}"):
+                run_submodule(network.ping_sweep, cidr)
+        elif choice == "c":
+            print(network.local_ports())
+            input("\nPress Enter to continue...")
+        else:
+            print("Invalid choice. Press Enter...")
+            input()
+
+def forensics_menu():
+    while True:
+        os.system('clear')
+        show_banner()
+        print("--- Forensics & Injection ---")
+        print("a. Hash file")
+        print("b. Entropy analysis")
+        print("c. EXIF read")
+        print("d. EXIF write")
+        print("e. Append payload to file")
+        print("f. LSB steganography (hide message in image)")
+        print("g. JPEG+ZIP polyglot")
+        print("b. Back to main menu")
+        choice = input("> ").strip().lower()
+        if choice == "b":
+            break
+        elif choice == "a":
+            path = pick_file()
+            if path:
+                algo = input("Hash algorithm (md5/sha1/sha256, default sha256): ").strip() or "sha256"
+                if confirm_command(f"python3 ~/Omni/core/forensics.py hash {path} --algo {algo}"):
+                    run_submodule(forensics.hash_file, path, algo)
+        elif choice == "b":
+            path = pick_file()
+            if path:
+                if confirm_command(f"python3 ~/Omni/core/forensics.py entropy {path}"):
+                    run_submodule(forensics.entropy, path)
+        elif choice == "c":
+            path = pick_file()
+            if path:
+                print(forensics.exif_read(path))
+                input("\nPress Enter to continue...")
+        elif choice == "d":
+            path = pick_file()
+            if path:
+                tag = input("EXIF tag (e.g., Artist, Comment): ").strip()
+                value = input("Value to write: ").strip()
+                out = pick_file() if input("Output file? (y/n): ").strip().lower() == 'y' else None
+                if confirm_command(f"python3 ~/Omni/core/forensics.py exif_write {path} --tag {tag} --value '{value}' --output {out}"):
+                    run_submodule(forensics.exif_write, path, tag, value, out)
+        elif choice == "e":
+            infile = pick_file()
+            if infile:
+                payload = input("Payload (text or path to file): ").strip()
+                if os.path.isfile(payload):
+                    with open(payload, "rb") as f:
+                        payload_data = f.read()
+                else:
+                    payload_data = payload.encode()
+                outfile = pick_file() if input("Output file? (y/n): ").strip().lower() == 'y' else None
+                if confirm_command(f"python3 ~/Omni/core/inject.py append {infile} --payload '{payload}' --output {outfile}"):
+                    run_submodule(inject.append_payload, infile, payload_data, outfile)
+        elif choice == "f":
+            img = pick_file()
+            if img:
+                msg = input("Message to hide: ").strip()
+                out = pick_file() if input("Output image? (y/n): ").strip().lower() == 'y' else None
+                if confirm_command(f"python3 ~/Omni/core/inject.py lsb {img} --payload '{msg}' --output {out}"):
+                    run_submodule(inject.lsb_hide, img, msg, out)
+        elif choice == "g":
+            jpg = pick_file()
+            if jpg:
+                zipf = pick_file()
+                if zipf:
+                    out = pick_file() if input("Output polyglot? (y/n): ").strip().lower() == 'y' else None
+                    if confirm_command(f"python3 ~/Omni/core/inject.py polyglot {jpg} --payload {zipf} --output {out}"):
+                        run_submodule(inject.polyglot_jpg_zip, jpg, zipf, out)
+        else:
+            print("Invalid choice. Press Enter...")
+            input()
+
+def export_menu():
+    while True:
+        os.system('clear')
+        show_banner()
+        print("--- Export ---")
+        print("a. Export last result to JSON")
+        print("b. Export last result to CSV")
+        print("b. Back to main menu")
+        choice = input("> ").strip().lower()
+        if choice == "b":
+            break
+        if last_result is None:
+            print("No result to export.")
+            input("\nPress Enter to continue...")
+            continue
+        if choice == "a":
+            filename = input("Output filename (optional): ").strip() or None
+            f = export.export_json(last_result, filename)
+            print(f"Exported to {f}")
+            input("\nPress Enter to continue...")
+        elif choice == "b":
+            filename = input("Output filename (optional): ").strip() or None
+            f = export.export_csv(last_result, filename)
+            print(f"Exported to {f}")
+            input("\nPress Enter to continue...")
+        else:
+            print("Invalid choice. Press Enter...")
+            input()
+
+def advanced_menu():
+    while True:
+        os.system('clear')
+        show_banner()
+        print("--- Advanced Tools ---")
+        print("a. Wordlist Generator")
+        print("b. Password Strength Analyzer")
+        print("c. Subdomain Takeover Check")
+        print("d. Email Breach Checker")
+        print("e. Directory Brute‑force")
+        print("b. Back to main menu")
+        choice = input("> ").strip().lower()
+        if choice == "b":
+            break
+        elif choice == "a":
+            first = input("First name: ").strip()
+            last = input("Last name: ").strip()
+            middle = input("Middle name (optional): ").strip()
+            year = input("Birth year (optional): ").strip()
+            nicks = input("Nicknames (space separated): ").strip().split()
+            favs = input("Favorite words (space separated): ").strip().split()
+            out = input("Output file (default wordlist.txt): ").strip() or "wordlist.txt"
+            cmd = f"python3 ~/Omni/core/wordgen.py --first {first} --last {last} --middle '{middle}' --year '{year}' --nick {' '.join(nicks)} --words {' '.join(favs)} --output {out}"
+            if confirm_command(cmd):
+                os.system(cmd)
+        elif choice == "b":
+            pwd = input("Password to analyze: ").strip()
+            if confirm_command(f"python3 ~/Omni/core/passwd_analyzer.py {pwd}"):
+                os.system(f"python3 ~/Omni/core/passwd_analyzer.py {pwd}")
+        elif choice == "c":
+            dom = input("Subdomain to check (e.g., test.example.com): ").strip()
+            if confirm_command(f"python3 ~/Omni/core/takeover.py {dom}"):
+                os.system(f"python3 ~/Omni/core/takeover.py {dom}")
+        elif choice == "d":
+            email = input("Email address: ").strip()
+            if confirm_command(f"python3 ~/Omni/core/email_breach.py {email}"):
+                os.system(f"python3 ~/Omni/core/email_breach.py {email}")
+        elif choice == "e":
+            url = input("Base URL: ").strip()
+            wl = input("Wordlist path (default ~/Omni/wordlists/dirlist.txt): ").strip() or "~/Omni/wordlists/dirlist.txt"
+            threads = input("Threads (default 10): ").strip() or "10"
+            if confirm_command(f"python3 ~/Omni/core/dirbrute.py {url} --wordlist {wl} --threads {threads}"):
+                os.system(f"python3 ~/Omni/core/dirbrute.py {url} --wordlist {wl} --threads {threads}")
+        else:
+            print("Invalid choice. Press Enter...")
+            input()
+
+def main_menu():
+    while True:
+        os.system('clear')
+        show_banner()
+        print("1. Reconnaissance")
+        print("2. Web Crawler")
+        print("3. Network Scanner")
+        print("4. File Forensics & Injection")
+        print("5. Export Results")
+        print("6. Advanced Tools")
+        print("7. Exit")
+        choice = input("> ").strip().lower()
+        if choice in ["1", "recon"]:
+            recon_menu()
+        elif choice in ["2", "crawl"]:
+            crawler_menu()
+        elif choice in ["3", "network"]:
+            network_menu()
+        elif choice in ["4", "file", "forensics"]:
+            forensics_menu()
+        elif choice in ["5", "export"]:
+            export_menu()
+        elif choice in ["6", "advanced"]:
+            advanced_menu()
+        elif choice in ["7", "exit"]:
+            print("Exiting.")
+            break
+        else:
+            print("Invalid choice. Press Enter...")
+            input()
+
+if __name__ == "__main__":
+    main_menu()
